@@ -145,15 +145,15 @@ public class CatalogScanAutomation {
         for (int i = 0; i < pageCount; i++) {
             Actions at = new Actions(driver);
             at.sendKeys(Keys.PAGE_DOWN).build().perform();
-            ThreadSleep(500);
+            threadSleep(500);
             log.info("Pagedown: " + i + "/" + pageCount + "...");
 
         }
     }
 
-    private void ThreadSleep(long miliseconds) {
+    private static void threadSleep(long miliseconds) {
         try {
-            Thread.sleep(500);
+            Thread.sleep(miliseconds);
         } catch (InterruptedException e) {
             log.warn("Thread sleep", e);
         }

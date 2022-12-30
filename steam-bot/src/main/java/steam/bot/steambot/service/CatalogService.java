@@ -59,6 +59,13 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         lowPrice.setLink(catalogItem.getLink());
         lowPrice.setPriceFrom(from);
         lowPrice.setPriceTo(to);
+        lowPrice.setTitle(catalogItem.getTitle());
+
+        if (from != 0) {
+            Double percent = to * 100 / from;
+            lowPrice.setPercent(percent);
+        }
+
         lowPriceRepository.save(lowPrice);
 
     }
@@ -71,8 +78,8 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
             saveCatalogItem.setCreatedAt(LocalDateTime.now());
         }
 
-        Double newPrice = ConvertPriceFromString(newCatalogItem.getPrice());
-        Double oldPrice = ConvertPriceFromString(saveCatalogItem.getPrice());
+        Double newPrice = convertPriceFromString(newCatalogItem.getPrice());
+        Double oldPrice = convertPriceFromString(saveCatalogItem.getPrice());
 
         // Notify if low price
         if (newPrice < oldPrice) {
@@ -113,7 +120,8 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         save(ci);
     }
 
-    private Double ConvertPriceFromString(String price) {
+    private Double convertPriceFromString(String price) {
+        price = price + "";
         price = price.replace(".", ".");
         price = price.replace(",", ".");
         price = price.replace("R$", "");

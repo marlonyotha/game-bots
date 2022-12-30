@@ -23,7 +23,9 @@ public class LowPrice extends AbstractModel {
     private String title;
 
     private Double priceFrom;
-    
+
     private Double priceTo;
+
+    private Double percent;
 
 }

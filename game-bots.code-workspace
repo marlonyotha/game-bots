@@ -11,5 +11,16 @@
 		"recommendations": [
 			"Pivotal.vscode-boot-dev-pack"
 		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "java",
+				"name": "steam-bot",
+				"request": "launch",
+				"mainClass": "steam.bot.steambot.SteamBotApplication"
+			}
+		]
 	}
 }
