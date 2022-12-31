@@ -24,7 +24,7 @@ public class CatalogScanAutomation {
 
     public void scanAll() {
 
-        int totalPageDown = 50;
+        int totalPageDown = 500;
         this.driver.get(
                 "https://store.steampowered.com/search/?ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
 
@@ -145,7 +145,7 @@ public class CatalogScanAutomation {
         for (int i = 0; i < pageCount; i++) {
             Actions at = new Actions(driver);
             at.sendKeys(Keys.PAGE_DOWN).build().perform();
-            threadSleep(500);
+            threadSleep(300);
             log.info("Pagedown: " + i + "/" + pageCount + "...");
 
         }

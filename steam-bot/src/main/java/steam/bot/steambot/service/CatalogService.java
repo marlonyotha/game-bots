@@ -69,6 +69,13 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         lowPriceRepository.save(lowPrice);
 
     }
+    private void clearLowPrice(CatalogItem saveCatalogItem) {
+        LowPrice item = lowPriceRepository.findByAppKey(saveCatalogItem.getAppKey());
+        if(item != null){
+            lowPriceRepository.delete(item);
+        }
+    }
+
 
     public CatalogItem save(CatalogItem newCatalogItem) {
 
@@ -84,6 +91,8 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         // Notify if low price
         if (newPrice < oldPrice) {
             onLowPrice(saveCatalogItem, oldPrice, newPrice);
+        } else {
+            clearLowPrice(saveCatalogItem);
         }
 
         saveCatalogItem.setAppKey(newCatalogItem.getAppKey());
@@ -112,12 +121,17 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
 
     }
 
+
     @Override
     public synchronized void onApplicationEvent(CatalogItemRead catalogItemRead) {
-        CatalogItem ci = catalogItemRead.getCatalogItem();
-        if (ci == null)
-            return;
-        save(ci);
+        try {
+            CatalogItem ci = catalogItemRead.getCatalogItem();
+            if (ci == null)
+                return;
+            save(ci);
+        } catch (Exception e) {
+            log.error("Save catalog item failed.", e);
+        }
     }
 
     private Double convertPriceFromString(String price) {
