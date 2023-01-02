@@ -6,15 +6,12 @@ import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import lombok.extern.slf4j.Slf4j;
 import steam.bot.steambot.automation.CatalogScanAutomation;
-import steam.bot.steambot.events.CatalogItemRead;
 import steam.bot.steambot.model.CatalogItem;
 import steam.bot.steambot.model.LowPrice;
 import steam.bot.steambot.repository.CatalogItemRespository;
@@ -22,7 +19,10 @@ import steam.bot.steambot.repository.LowPriceRepository;
 
 @Slf4j
 @Service
-public class CatalogService implements ApplicationListener<CatalogItemRead> {
+public class CatalogService {
+
+    @Autowired
+    private CatalogService catalogService;
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
@@ -36,14 +36,14 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
     @Autowired
     private LowPriceRepository lowPriceRepository;
 
-    @Scheduled(fixedDelay = 1000 * 60 * 10)
+    // @Scheduled(fixedDelay = 1000 * 60 * 120)
     @EventListener(ApplicationReadyEvent.class)
     public void onAplicationReady() {
 
         StopWatch watch = new StopWatch();
         try {
             watch.start();
-            CatalogScanAutomation script = new CatalogScanAutomation(webDriver, applicationEventPublisher);
+            CatalogScanAutomation script = new CatalogScanAutomation(webDriver, applicationEventPublisher, catalogService);
             script.scanAll();
             watch.stop();
             log.info("Catalog scan finished in " + watch.getTotalTimeSeconds() + " seconds");
@@ -60,22 +60,19 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         lowPrice.setPriceFrom(from);
         lowPrice.setPriceTo(to);
         lowPrice.setTitle(catalogItem.getTitle());
-
         if (from != 0) {
             Double percent = to * 100 / from;
             lowPrice.setPercent(percent);
         }
-
         lowPriceRepository.save(lowPrice);
-
     }
+
     private void clearLowPrice(CatalogItem saveCatalogItem) {
         LowPrice item = lowPriceRepository.findByAppKey(saveCatalogItem.getAppKey());
-        if(item != null){
+        if (item != null) {
             lowPriceRepository.delete(item);
         }
     }
-
 
     public CatalogItem save(CatalogItem newCatalogItem) {
 
@@ -119,19 +116,6 @@ public class CatalogService implements ApplicationListener<CatalogItemRead> {
         catalogItemRespository.save(saveCatalogItem);
         return saveCatalogItem;
 
-    }
-
-
-    @Override
-    public synchronized void onApplicationEvent(CatalogItemRead catalogItemRead) {
-        try {
-            CatalogItem ci = catalogItemRead.getCatalogItem();
-            if (ci == null)
-                return;
-            save(ci);
-        } catch (Exception e) {
-            log.error("Save catalog item failed.", e);
-        }
     }
 
     private Double convertPriceFromString(String price) {
