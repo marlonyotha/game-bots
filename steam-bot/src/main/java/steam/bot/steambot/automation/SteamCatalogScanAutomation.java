@@ -26,7 +26,7 @@ public class SteamCatalogScanAutomation {
 
     public void scanAll() {
 
-        int totalPageDown = 10;
+        int totalPageDown = 100;
         this.driver.get("https://store.steampowered.com/search/?ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
 
         pageDown(totalPageDown);
@@ -66,6 +66,16 @@ public class SteamCatalogScanAutomation {
         return "//*[@id='search_resultsRows']/a[" + index + "]";
     }
 
+    private boolean isLoading() {
+        String xpath = "//*[@id='search_results_loading']";
+        WebElement element = this.driver.findElement(By.xpath(xpath));
+        String attribute = element.getAttribute("style");
+
+        if( attribute.contentEquals("display: none;")){
+            return false;
+        }
+        return true;
+    }
     private CatalogItem rowAdapter(long index, WebElement row) {
 
         StopWatch watch = new StopWatch();
@@ -150,8 +160,10 @@ public class SteamCatalogScanAutomation {
         for (int i = 0; i < pageCount; i++) {
             try {
                 Actions at = new Actions(driver);
-                at.sendKeys(Keys.END).build().perform();
-                threadSleep(1000);
+                at.sendKeys(Keys.PAGE_DOWN).build().perform();
+                if(isLoading()){
+                    threadSleep(1000);
+                }
             } catch (Exception e) {
                 log.error("Pagedown failed", e);
             }
