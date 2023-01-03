@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import lombok.extern.slf4j.Slf4j;
-import steam.bot.steambot.automation.CatalogScanAutomation;
+import steam.bot.steambot.automation.SteamCatalogScanAutomation;
 import steam.bot.steambot.model.CatalogItem;
 import steam.bot.steambot.model.LowPrice;
 import steam.bot.steambot.repository.CatalogItemRespository;
@@ -43,7 +43,7 @@ public class CatalogService {
         StopWatch watch = new StopWatch();
         try {
             watch.start();
-            CatalogScanAutomation script = new CatalogScanAutomation(webDriver, applicationEventPublisher, catalogService);
+            SteamCatalogScanAutomation script = new SteamCatalogScanAutomation(webDriver, applicationEventPublisher, catalogService);
             script.scanAll();
             watch.stop();
             log.info("Catalog scan finished in " + watch.getTotalTimeSeconds() + " seconds");

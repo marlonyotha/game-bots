@@ -1,4 +1,4 @@
-package epic.bot.epicbot.automation;
+package steam.bot.steambot.automation;
 
 import java.util.List;
 
@@ -12,55 +12,58 @@ import org.springframework.util.StopWatch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import epic.bot.epicbot.events.CatalogItemRead;
-import epic.bot.epicbot.model.CatalogItem;
+import steam.bot.steambot.model.CatalogItem;
+import steam.bot.steambot.service.CatalogService;
 
 @Slf4j
 @RequiredArgsConstructor
-public class CatalogScanAutomation {
+public class SteamCatalogScanAutomation {
 
     protected final WebDriver driver;
     protected final ApplicationEventPublisher applicationEventPublisher;
+    protected final CatalogService catalogService;
+
 
     public void scanAll() {
 
-        int totalPageDown = 50;
-        this.driver.get(
-                "https://store.steampowered.com/search/?ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
+        int totalPageDown = 10;
+        this.driver.get("https://store.steampowered.com/search/?ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
 
         pageDown(totalPageDown);
 
         WebElement searchResultsRows = this.driver.findElement(By.id("search_resultsRows"));
         List<WebElement> rows = searchResultsRows.findElements(By.xpath("//*[@id='search_resultsRows']/a[*]"));
 
-        long current = 0;
+        long total = 0;
         long count = rows.size();
 
-        for (long i = current; i < count; i++) {
+        for (long i = 0; i < count; i++) {
 
-            log.info("Getting item: " + i + "/" + count);
+            total++;
+            log.info("Getting item: " + i + "/" + count + " (Total: " + total + ")");
 
+            long index = i + 1;
             try {
-                long index = i + 1;
-                String xpath = "//*[@id='search_resultsRows']/a[" + index + "]";
+                String xpath = getRowXPath(index);
                 WebElement row = searchResultsRows.findElement(By.xpath(xpath));
-
                 CatalogItem item = rowAdapter(index, row);
-                applicationEventPublisher.publishEvent(new CatalogItemRead(this, item));
-
-                if (index >= count) {
-
-                    pageDown(totalPageDown);
-                    rows = searchResultsRows.findElements(By.xpath("//*[@id='search_resultsRows']/a[*]"));
-                    current = i;
-                    count = rows.size();
-
-                }
-
+                catalogService.save(item);
             } catch (Exception e) {
-                log.error("Failed.", e);
+                log.error("Save failed", e);
+            }
+
+            if (index >= count) {
+
+                pageDown(totalPageDown);
+                rows = searchResultsRows.findElements(By.xpath("//*[@id='search_resultsRows']/a[*]"));
+                count = rows.size();
+
             }
         }
+    }
+
+    private String getRowXPath(long index) {
+        return "//*[@id='search_resultsRows']/a[" + index + "]";
     }
 
     private CatalogItem rowAdapter(long index, WebElement row) {
@@ -118,7 +121,8 @@ public class CatalogScanAutomation {
 
         try {
             String xpath = "//*[@id='search_resultsRows']/a[" + index + "]/div[2]/div[3]/span";
-            String value = row.findElement(By.xpath(xpath)).getText();
+            WebElement element = row.findElement(By.xpath(xpath));
+            String value = element.getAttribute("data-tooltip-html");
             item.setSummaryPositive(value);
         } catch (Exception e) {
             item.setSummaryPositive("");
@@ -143,17 +147,20 @@ public class CatalogScanAutomation {
     private void pageDown(int pageCount) {
 
         for (int i = 0; i < pageCount; i++) {
-            Actions at = new Actions(driver);
-            at.sendKeys(Keys.PAGE_DOWN).build().perform();
-            ThreadSleep(500);
-            log.info("Pagedown: " + i + "/" + pageCount + "...");
+            try {
+                Actions at = new Actions(driver);
+                at.sendKeys(Keys.END).build().perform();
+                threadSleep(1000);
+            } catch (Exception e) {
+                log.error("Pagedown failed", e);
+            }
 
         }
     }
 
-    private void ThreadSleep(long miliseconds) {
+    private static void threadSleep(long miliseconds) {
         try {
-            Thread.sleep(500);
+            Thread.sleep(miliseconds);
         } catch (InterruptedException e) {
             log.warn("Thread sleep", e);
         }
