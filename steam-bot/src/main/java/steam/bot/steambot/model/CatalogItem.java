@@ -18,6 +18,8 @@ public class CatalogItem extends AbstractModel {
 
     public static final String UK_BOT_APP_KEY = "uk-app-key_cpf";
 
+    private String source;
+
     @Column(length = 5000)
     private String appKey;
 

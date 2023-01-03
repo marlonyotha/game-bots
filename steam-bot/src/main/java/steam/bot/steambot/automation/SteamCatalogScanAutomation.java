@@ -72,6 +72,7 @@ public class SteamCatalogScanAutomation {
         watch.start();
 
         CatalogItem item = new CatalogItem();
+        item.setSource("steam");
 
         // Required
         String appKey = row.getAttribute("data-ds-itemkey");

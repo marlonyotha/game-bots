@@ -22,9 +22,6 @@ import steam.bot.steambot.repository.LowPriceRepository;
 public class CatalogService {
 
     @Autowired
-    private CatalogService catalogService;
-
-    @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
@@ -36,14 +33,13 @@ public class CatalogService {
     @Autowired
     private LowPriceRepository lowPriceRepository;
 
-    // @Scheduled(fixedDelay = 1000 * 60 * 120)
     @EventListener(ApplicationReadyEvent.class)
     public void onAplicationReady() {
 
         StopWatch watch = new StopWatch();
         try {
             watch.start();
-            SteamCatalogScanAutomation script = new SteamCatalogScanAutomation(webDriver, applicationEventPublisher, catalogService);
+            SteamCatalogScanAutomation script = new SteamCatalogScanAutomation(webDriver, applicationEventPublisher, this);
             script.scanAll();
             watch.stop();
             log.info("Catalog scan finished in " + watch.getTotalTimeSeconds() + " seconds");
@@ -102,6 +98,7 @@ public class CatalogService {
         saveCatalogItem.setThumbnailImgSrcSet(newCatalogItem.getThumbnailImgSrcSet());
         saveCatalogItem.setTitle(newCatalogItem.getTitle());
         saveCatalogItem.setCurrentPrice(newPrice);
+        saveCatalogItem.setSource(newCatalogItem.getSource());
 
         // Save min/max prices
         if (saveCatalogItem.getMinPrice() != null && newPrice < saveCatalogItem.getMinPrice()) {
@@ -134,7 +131,6 @@ public class CatalogService {
             log.info("Convert price '" + price + "' failed. Default=0");
             value = 0D;
         }
-
         return value;
     }
 
