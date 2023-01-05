@@ -26,8 +26,9 @@ public class SteamCatalogScanAutomation {
     public void scanAll() {
 
         int totalPageDown = 100;
+        String term = "d";
         this.driver.get(
-                "https://store.steampowered.com/search/?ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
+                "https://store.steampowered.com/search/?term=" + term + "&ignore_preferences=1&supportedlang=brazilian%2Cenglish&category1=998%2C994&os=win&hidef2p=1");
 
         pageDown(totalPageDown);
 
